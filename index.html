@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animation 3D Cube</title>
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #282c34; /* Fond sombre */
+            color: #ffffff; /* Texte blanc */
+            font-family: 'Arial', sans-serif;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .scene {
+            width: 250px; /* Augmenter la taille du cube */
+            height: 250px;
+            perspective: 800px; /* Perspective pour le cube */
+            margin: auto; /* Centrer la scène */
+        }
+
+        .cube {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d; /* Préserve le style en 3D */
+            transition: transform 0.5s ease; /* Transition fluide */
+            color: black;
+        }
+
+        .face {
+            position: absolute;
+            width: 250px; /* Ajuster la taille des faces */
+            height: 250px;
+            background-color: rgba(255, 255, 255, 0.9); /* Couleur blanche avec transparence */
+            border-radius: 10px; /* Coins arrondis */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px; /* Augmenter la taille de la police */
+            font-weight: bold; /* Mettre le texte en gras */
+            
+            /* Ombre pour chaque face */
+            box-shadow: 0 4px 40px rgba(239, 3, 3, 0.5);
+        }
+
+        .front { transform: translateZ(125px); }
+        .back { transform: rotateY(180deg) translateZ(125px); }
+        .left { transform: rotateY(-90deg) translateZ(125px); }
+        .right { transform: rotateY(90deg) translateZ(125px); }
+        .top { transform: rotateX(90deg) translateZ(125px); }
+        .bottom { transform: rotateX(-90deg) translateZ(125px); }
+
+        p {
+            margin-top: 20px;
+            font-size: 18px; /* Taille de police pour le texte d'instructions */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Animation de Cube 3D</h1><br><br>
+        <div class="scene">
+            <div class="cube" id="cube">
+                <div class="face front">Avant</div>
+                <div class="face back">Arrière</div>
+                <div class="face left">Gauche</div>
+                <div class="face right">Droite</div>
+                <div class="face top">Haut</div>
+                <div class="face bottom">Bas</div>
+            </div>
+        </div><br><br><br>
+        <p>Utilisez la souris pour contrôler le cube.</p>
+        <footer class="text-center mt-5 text-white">
+            <div class="container">
+                <p>&copy; 2024 Animation de Cube 3D. Tous droits réservés.</p>
+                <p>Créé et Dévelopé par VicDev</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="jquery-3.6.0.min.js"></script>
+    <script>
+        const cube = document.getElementById('cube');
+        let rotateX = 30; // Angle initial en X
+        let rotateY = 45; // Angle initial en Y
+
+        function updateCube() {
+           cube.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        }
+
+        // Contrôle avec la souris
+        document.addEventListener('mousemove', (event) => {
+           const x = (event.clientX / window.innerWidth - 0.5) * -2; // Normalisation et inversion
+           const y = (event.clientY / window.innerHeight - 0.5) * -2; // Normalisation et inversion
+           rotateY = x * 180; // Ajuster l'angle Y
+           rotateX = y * 180; // Ajuster l'angle X
+           updateCube();
+        });
+
+        // Contrôle avec le clavier
+        document.addEventListener('keydown', (event) => {
+           switch(event.key) {
+               case 'ArrowUp':
+                   rotateX -= 10; // Tourner vers le haut
+                   break;
+               case 'ArrowDown':
+                   rotateX += 10; // Tourner vers le bas
+                   break;
+               case 'ArrowLeft':
+                   rotateY -= 10; // Tourner vers la gauche
+                   break;
+               case 'ArrowRight':
+                   rotateY += 10; // Tourner vers la droite
+                   break;
+               default:
+                   return; // Quitter si ce n'est pas une touche flèche
+           }
+           
+           updateCube();
+        });
+    </script>
+</body>
+</html>
