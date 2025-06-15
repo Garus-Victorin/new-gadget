@@ -1,0 +1,215 @@
+<!-- fichier : gestion-taches.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des tâches</title>
+  <link href="bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+      min-height: 100vh;
+      padding: 30px 0;
+    }
+    .task-card {
+      margin-bottom: 18px;
+      transition: box-shadow 0.3s, transform 0.3s;
+      border-radius: 18px;
+    }
+    .task-card:hover {
+      box-shadow: 0 8px 24px rgba(80, 80, 200, 0.12);
+      transform: translateY(-2px) scale(1.01);
+    }
+    .task-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .modal-header {
+      background: #6366f1;
+      color: #fff;
+    }
+    .btn-primary {
+      background: #6366f1;
+      border: none;
+    }
+    .btn-primary:hover {
+      background: #4f46e5;
+    }
+    .footer{
+        margin-bottom: 100px;
+        border-radius: 15px;
+        box-shadow: 0px 0px 5px 0px black;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="text-center mb-5 fw-bold" style="color:#6366f1;">Gestion des tâches</h1>
+
+    <!-- Formulaire d'ajout -->
+    <div class="mb-4 d-flex gap-2">
+      <input id="taskInput" class="form-control form-control-lg" placeholder="Ajouter une nouvelle tâche..." />
+      <button id="addTaskBtn" class="btn btn-primary btn-lg">Ajouter</button>
+    </div>
+
+    <!-- Liste des tâches -->
+    <div id="tasksContainer" class="row"></div>
+  </div>
+
+  <!-- Modal de modification -->
+  <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalLabel">Modifier la tâche</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" id="editTaskInput" class="form-control" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-primary" id="saveEditBtn">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmation de suppression -->
+  <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title" id="deleteModalLabel">Supprimer la tâche</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+        </div>
+        <div class="modal-body">
+          Voulez-vous vraiment supprimer cette tâche ?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+        <footer class="text-center mt-5 text-dark footer">
+                <p>&copy; 2025 Gestionnaire des Tâches. Tous droits réservés.</p>
+                <p>Créé et Dévelopé par VicDev</p>
+        </footer>
+  <script src="bootstrap.min.js"></script> 
+  <script>
+    // Sélection des éléments du DOM
+    const taskInput = document.getElementById('taskInput');
+    const addTaskBtn = document.getElementById('addTaskBtn');
+    const tasksContainer = document.getElementById('tasksContainer');
+    const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const editTaskInput = document.getElementById('editTaskInput');
+    const saveEditBtn = document.getElementById('saveEditBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    // Chargement des tâches depuis le localStorage
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    let currentEditIndex = null;
+    let currentDeleteIndex = null;
+
+    // Affichage des tâches
+    function renderTasks() {
+      tasksContainer.innerHTML = '';
+      tasks.forEach((task, index) => {
+        const card = document.createElement('div');
+        card.className = 'col-md-4';
+        card.innerHTML = `
+          <div class="card task-card shadow-sm">
+            <div class="card-body d-flex flex-column">
+              <div class="d-flex align-items-center mb-2">
+                <input type="checkbox" class="form-check-input me-2" ${task.done ? 'checked' : ''} data-index="${index}" />
+                <span class="card-text flex-grow-1 ${task.done ? 'text-decoration-line-through text-muted' : ''}" style="font-size:1.2rem;">
+                  ${task.text}
+                </span>
+              </div>
+              <div class="task-actions">
+                <button class="btn btn-warning edit-btn" data-index="${index}">Modifier</button>
+                <button class="btn btn-danger delete-btn" data-index="${index}">Supprimer</button>
+              </div>
+            </div>
+          </div>
+        `;
+        tasksContainer.appendChild(card);
+      });
+    }
+
+    // Sauvegarde dans le localStorage
+    function saveTasks() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    // Ajout d'une tâche
+    addTaskBtn.addEventListener('click', () => {
+      const text = taskInput.value.trim();
+      if (text !== '') {
+        tasks.push({ text, done: false });
+        taskInput.value = '';
+        saveTasks();
+        renderTasks();
+      }
+    });
+
+    // Gestion des actions sur les tâches
+    tasksContainer.addEventListener('click', (e) => {
+      const index = e.target.getAttribute('data-index');
+      if (e.target.classList.contains('edit-btn')) {
+        currentEditIndex = index;
+        editTaskInput.value = tasks[index].text;
+        editModal.show();
+      }
+      if (e.target.classList.contains('delete-btn')) {
+        currentDeleteIndex = index;
+        deleteModal.show();
+      }
+    });
+
+    // Modification d'une tâche
+    saveEditBtn.addEventListener('click', () => {
+      const newText = editTaskInput.value.trim();
+      if (newText !== '' && currentEditIndex !== null) {
+        tasks[currentEditIndex].text = newText;
+        saveTasks();
+        renderTasks();
+        editModal.hide();
+      }
+    });
+
+    // Suppression d'une tâche
+    confirmDeleteBtn.addEventListener('click', () => {
+      if (currentDeleteIndex !== null) {
+        tasks.splice(currentDeleteIndex, 1);
+        saveTasks();
+        renderTasks();
+        deleteModal.hide();
+      }
+    });
+
+    // Gestion de la case à cocher (tâche terminée)
+    tasksContainer.addEventListener('change', (e) => {
+      if (e.target.type === 'checkbox') {
+        const index = e.target.getAttribute('data-index');
+        tasks[index].done = e.target.checked;
+        saveTasks();
+        renderTasks();
+      }
+    });
+
+    // Entrée clavier pour ajouter une tâche
+    taskInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addTaskBtn.click();
+    });
+
+    // Initialisation
+    renderTasks();
+  </script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Interactive Calendar</title>
+    <style>
+        * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #f7f7f7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.calendar-container {
+  width: 90%;
+  max-width: 600px;
+  background-color: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+#month-year {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+button {
+  padding: 10px;
+  font-size: 14px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.days-of-week, .days-container {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  text-align: center;
+}
+
+.days-of-week div {
+  font-weight: bold;
+  color: #666;
+}
+
+.days-container .day {
+  background-color: #f4f4f4;
+  padding: 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.days-container .day:hover {
+  background-color: #ececec;
+}
+
+.event {
+  background-color: #007bff;
+  color: white;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  margin-top: 5px;
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  right: 5px;
+  cursor: move;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+input[type="text"], input[type="date"] {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+button {
+  width: 100%;
+}
+
+.close {
+  font-size: 20px;
+  float: right;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: red;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .calendar-container {
+      width: 95%;
+  }
+}
+
+@media (max-width: 480px) {
+  .days-container .day {
+      padding: 10px;
+  }
+}
+    </style>
+</head>
+<body>
+    <div class="calendar-container">
+        <div class="header">
+            <button id="prev">&laquo; Prev</button>
+            <h2 id="month-year"></h2>
+            <button id="next">Next &raquo;</button>
+        </div>
+        <div class="days-of-week">
+            <div>Sun</div>
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
+        </div>
+        <div id="days-container" class="days-container"></div>
+    </div>
+
+    <!-- Modal for adding events -->
+    <div id="event-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add Event</h2>
+            <input type="text" id="event-name" placeholder="Event name">
+            <input type="date" id="event-date">
+            <button id="save-event">Save Event</button>
+        </div>
+    </div>
+
+    <script>
+        const daysContainer = document.getElementById('days-container');
+const monthYear = document.getElementById('month-year');
+const prevBtn = document.getElementById('prev');
+const nextBtn = document.getElementById('next');
+const eventModal = document.getElementById('event-modal');
+const closeModal = document.querySelector('.close');
+const saveEventBtn = document.getElementById('save-event');
+const eventNameInput = document.getElementById('event-name');
+const eventDateInput = document.getElementById('event-date');
+
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+let events = {}; // Object to store events
+
+const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+function generateCalendar(month, year) {
+    daysContainer.innerHTML = '';
+    monthYear.innerText = `${months[month]} ${year}`;
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // Add empty divs for days before the first of the month
+    for (let i = 0; i < firstDay; i++) {
+        const emptyDiv = document.createElement('div');
+        daysContainer.appendChild(emptyDiv);
+    }
+
+    // Add day divs with click functionality to open the modal
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayDiv = document.createElement('div');
+        dayDiv.classList.add('day');
+        dayDiv.innerText = day;
+
+        // If there's an event for this day, display it
+        const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        if (events[dateKey]) {
+            const eventDiv = document.createElement('div');
+            eventDiv.classList.add('event');
+            eventDiv.innerText = events[dateKey];
+            dayDiv.appendChild(eventDiv);
+        }
+
+        dayDiv.addEventListener('click', () => openEventModal(day));
+        daysContainer.appendChild(dayDiv);
+    }
+}
+
+function openEventModal(day) {
+    eventModal.style.display = 'flex';
+    eventDateInput.value = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+closeModal.addEventListener('click', () => {
+    eventModal.style.display = 'none';
+});
+
+saveEventBtn.addEventListener('click', () => {
+    const eventName = eventNameInput.value;
+    const eventDate = eventDateInput.value;
+
+    if (eventName && eventDate) {
+        const dateKey = eventDate;
+        events[dateKey] = eventName;
+
+        // Regenerate the calendar to display the new event
+        generateCalendar(currentMonth, currentYear);
+        eventModal.style.display = 'none';
+    }
+});
+
+prevBtn.addEventListener('click', () => {
+    currentMonth--;
+    if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+    }
+    generateCalendar(currentMonth, currentYear);
+});
+
+nextBtn.addEventListener('click', () => {
+    currentMonth++;
+    if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+    }
+    generateCalendar(currentMonth, currentYear);
+});
+
+// Initial calendar generation
+generateCalendar(currentMonth, currentYear);
+    </script>
+</body>
+</html>
